@@ -1,7 +1,7 @@
-
 import re
 from pathlib import Path
 from dataclasses import dataclass
+import os
 
 @dataclass
 class ImageEntry:
@@ -11,31 +11,31 @@ class ImageEntry:
 
 IMG_PATTERN = r'(<img\s+[^>]*src="([^"]+)"[^>]*>)'
 
-def extract_images(md_file_path: str | Path):
+def extract_images(md_file_path: str | Path, md_name: str):
     """
     Извлекает все <img ...> из Markdown-файла.
 
     :param md_file_path: путь к .md файлу
     :return: список ImageEntry
     """
+    BASE_DIR = Path(__file__).parent.parent
+    IMG_DIR = BASE_DIR / "images" / md_name / "media"
+
     md_path = Path(md_file_path)
     text = md_path.read_text(encoding="utf-8")
-
-    # Директория с изображениями
-    img_dir = Path("images/media").resolve()
 
     matches = re.findall(IMG_PATTERN, text, flags=re.IGNORECASE)
     results = []
 
     for tag, src in matches:
-        # Берём только имя файла, чтобы не дублировать директории
+
         file_name = Path(src).name
-        abs_path = (img_dir / file_name).resolve()
+        abs_path = IMG_DIR / file_name
 
         # Проверяем EMF
         if abs_path.suffix.lower() == ".emf":
             from conver_emf_png import emf_to_png  # твоя функция
-            png_path = Path(emf_to_png(abs_path, img_dir))
+            png_path = Path(emf_to_png(str(abs_path), IMG_DIR))
             os.remove(abs_path)
             src = png_path.name
             text = text.replace(file_name, src)
@@ -43,18 +43,14 @@ def extract_images(md_file_path: str | Path):
         results.append(
             ImageEntry(
                 src=src,
-                path=(img_dir / src).resolve(),
+                path=(IMG_DIR / src).resolve(),
                 tag=tag
             )
         )
 
-    # Сохраняем MD с обновлёнными путями
     md_path.write_text(text, encoding="utf-8")
-    return results
+    return results, IMG_DIR
 
-    # Сохраняем MD с обновлёнными путями
-    md_path.write_text(text, encoding="utf-8")
-    return results
 
 
 if __name__ == "__main__":

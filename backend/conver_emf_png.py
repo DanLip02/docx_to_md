@@ -7,7 +7,7 @@ def emf_to_png(emf_path, output_dir):
         os.makedirs(output_dir)
 
     if not os.path.exists(emf_path):
-        print("Файл не найден:", emf_path)
+        print("File was not found:", emf_path)
         return None
     else:
         base_name = os.path.splitext(os.path.basename(emf_path))[0]
@@ -15,16 +15,11 @@ def emf_to_png(emf_path, output_dir):
         subprocess.run(["magick", "-density", "300", emf_path, png_path], check=True)
         return png_path
 
-# Пример
 
 if __name__ =='__main__':
-    # working_dir = Path(r"C:\Users\Danch\PycharmProjects\docx_to_md")
-    # os.chdir(working_dir)  # смена текущей директории
-
 
     BASE_DIR = Path(__file__).parent.parent
 
-    # Пример: папка с md
     MD_DIR = BASE_DIR / "output_md"
     IMG_DIR = BASE_DIR / "images/media"
 
