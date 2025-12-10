@@ -29,6 +29,7 @@ def convert_docx_md(path):
     # final file
     output_md = MD_DIR / f"{path.stem}.md"
 
+    print(MEDIA_DIR)
     command = [
         "pandoc",
         str(path),

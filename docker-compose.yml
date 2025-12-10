@@ -1,0 +1,19 @@
+services:
+  docx_to_md:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: docx_to_md:1.0.0
+    container_name: docx_to_md_v1
+    restart: on-failure
+    volumes:
+      - ./backend:/backend
+      - ./data:/data
+      - ./output_md:/output_md
+      - ./images:/images
+      - ./classification_json:/classification_json
+    ports:
+      - "${EXT_PORT}:${INT_PORT}"
+    command: ["main:app", "--port", "$INT_PORT", "--host", "$host_server"]
+    env_file:
+      - .env

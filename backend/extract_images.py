@@ -13,10 +13,10 @@ IMG_PATTERN = r'(<img\s+[^>]*src="([^"]+)"[^>]*>)'
 
 def extract_images(md_file_path: str | Path, md_name: str):
     """
-    Извлекает все <img ...> из Markdown-файла.
+    Extract<img ...> from Markdown.
 
-    :param md_file_path: путь к .md файлу
-    :return: список ImageEntry
+    :param md_file_path: path to  .md falis
+    :return: list ImageEntry
     """
     BASE_DIR = Path(__file__).parent.parent
     IMG_DIR = BASE_DIR / "images" / md_name / "media"
@@ -32,7 +32,6 @@ def extract_images(md_file_path: str | Path, md_name: str):
         file_name = Path(src).name
         abs_path = IMG_DIR / file_name
 
-        # Проверяем EMF
         if abs_path.suffix.lower() == ".emf":
             from conver_emf_png import emf_to_png  # твоя функция
             png_path = Path(emf_to_png(str(abs_path), IMG_DIR))
@@ -56,7 +55,7 @@ def extract_images(md_file_path: str | Path, md_name: str):
 if __name__ == "__main__":
     import os
     working_dir = Path(r"C:\Users\Danch\PycharmProjects\docx_to_md")
-    os.chdir(working_dir)  # смена текущей директории
+    os.chdir(working_dir)
 
     out = extract_images("output_md/output.md")
     # for img in out:
