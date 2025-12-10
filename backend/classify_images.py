@@ -1,20 +1,23 @@
 import os
 import base64
 import json
-# from openai import OpenAI
 from dotenv import load_dotenv
 from pathlib import Path
 import requests
 from typing import List, Optional, Any
 from pydantic import BaseModel
 
-load_dotenv()
-API_LLM_KEY = os.getenv("API_LLM_KEY")
-BASE_URL_LLM = os.getenv("URL_LLM")
+# load_dotenv("config_model.env")
+# API_LLM_KEY = os.getenv("API_LLM_KEY")
+# BASE_URL_LLM = os.getenv("URL_LLM")
 
 
 # client = OpenAI(base_url=f"{BASE_URL_LLM}/v1/", api_key="YOUR_API_KEY")
 
+load_dotenv("config_model.env")
+API_LLM_KEY = os.getenv("API_LLM_KEY")
+BASE_URL_LLM = os.getenv("URL_LLM")
+MODEL = os.getenv("MODEL")
 
 class Message(BaseModel):
     role: str
@@ -59,20 +62,24 @@ def classify_image_llm(image_path: str) -> str:
     """
 
     img_base64 = encode_image(image_path)
-
-    prompt = """Привет ! 
-        Дай классификацию данного изображение - таблица или картинка.
-        Учти, что таблица характерезуется в основном линиями и большим колличеством цирф (чисел) - в противном случае может быть изображение. 
-        Верни в формате json без дополнительного текста. 
-        Формат json имеет вид {'type': '...', 'discription':'...'}, где type - table / image """
+    # print(img_base64)
+    prompt = """
+        Hello! 
+        Classify the provided image as either a table or an illustration.
+        Keep in mind that tables are typically characterized by lines and a large number of digits (numbers); otherwise, it is likely an illustration.
+        Return the answer in JSON format without any additional text.
+        The JSON format should be: {'type': '...', 'description': '...'}, 
+        where 'type' is either 'table' or 'image'.
+    """
 
     image_url = f"data:image/png;base64,{img_base64}"
-
+    print(BASE_URL_LLM)
+    print(MODEL)
     response = requests.post(
         f"{BASE_URL_LLM}/v1/chat/completions",
         headers={"Authorization": f"{API_LLM_KEY}"},
         json={
-            "model": os.getenv("MODEL"),
+            "model": MODEL,
             "messages": [
                 {
                     "role": "user",
@@ -85,6 +92,7 @@ def classify_image_llm(image_path: str) -> str:
         }
     )
 
+    print(response.status_code)
     parsed = ChatCompletionResponse(**response.json())
     label = json.loads(parsed.choices[0].message.content.strip().lower())["type"]
 
@@ -100,6 +108,7 @@ def classify_all_images(folder_path: str) -> dict:
     Classify each PNG/JPG images in the folder.
     Return dict.
     """
+
     results = {}
 
     for file in os.listdir(folder_path):
@@ -124,6 +133,9 @@ def extract_table_md(image_path: str) -> str:
     """
 
     """
+    # load_dotenv("config_model.env")
+    # API_LLM_KEY = os.getenv("API_LLM_KEY")
+    # BASE_URL_LLM = os.getenv("URL_LLM")
 
     image_base64 = encode_image(image_path)
 
@@ -138,7 +150,7 @@ def extract_table_md(image_path: str) -> str:
     5. Do not merge cells visually – treat each visible cell as a separate cell.
     6. Strictly follow the table structure.
     
-    Output: ONLY HTML table. Bit I do not need format for markdown exatcly with specific ``` html ... ```.
+    Output: ONLY HTML table. Bit I do not need format for markdown exatcly with specific.
     """
 
     image_url = f"data:image/png;base64,{image_base64}"
@@ -147,7 +159,7 @@ def extract_table_md(image_path: str) -> str:
         f"{BASE_URL_LLM}/v1/chat/completions",
         headers={"Authorization": f"{API_LLM_KEY}"},
         json={
-            "model": os.getenv("MODEL_OCR", os.getenv("MODEL")),
+            "model": MODEL,
             "messages": [
                 {
                     "role": "user",
@@ -173,17 +185,25 @@ def extract_image_md(image_path: str) -> str:
     """
 
     """
+    # load_dotenv("config_model.env")
+    # API_LLM_KEY = os.getenv("API_LLM_KEY")
+    # BASE_URL_LLM = os.getenv("URL_LLM")
 
     image_base64 = encode_image(image_path)
 
     prompt = """
-    You are converting an image to text description.
+    You are converting an image into a detailed textual description.
+
+    Strict rules:
     
-    Rules:
-    1. Describe only what is visible.
-    2. No hallucinations.
-    3. No extra commentary or reasoning.
-    4. Output must be a single text block (text only).
+    1. Describe only what is directly visible in the image.
+    2. Do not invent or infer anything that cannot be strictly seen.
+    3. No tables, no lists, no markdown formatting, no headings.
+    4. The output must be continuous plain text only.
+    5. Replace any structures resembling tables (rows/columns) with natural descriptive prose. 
+    6. Provide a detailed narrative description of all visible elements: objects, layout, colors, relations, labels, and text in the image.
+    7. Do not add commentary, explanations, or meta-notes. Just the description.
+    8. Output must be a single text block without line breaks at the start or end.
     """
 
     image_url = f"data:image/png;base64,{image_base64}"
@@ -192,7 +212,7 @@ def extract_image_md(image_path: str) -> str:
         f"{BASE_URL_LLM}/v1/chat/completions",
         headers={"Authorization": f"{API_LLM_KEY}"},
         json={
-            "model": os.getenv("MODEL_OCR", os.getenv("MODEL")),
+            "model": MODEL,
             "messages": [
                 {
                     "role": "user",
@@ -215,15 +235,10 @@ def extract_image_md(image_path: str) -> str:
     return md.strip()
 
 if __name__ == "__main__":
-    working_dir = Path(r"C:\Users\Danch\PycharmProjects\docx_to_md")
+    working_dir = Path(r"")
     os.chdir(working_dir)  # Chanche current directory
 
-    # folder = "images/media"  # path to folder with images
-    # out = classify_all_images(folder)
-    #
-    # with open("classification_result_new.json", "w", encoding="utf-8") as f:
-    #     json.dump(out, f, indent=4, ensure_ascii=False)
-
+    classification_path = ""
     print("Done! Result saved in classification_result.json")
 
     with open(classification_path, "r", encoding="utf-8") as f:

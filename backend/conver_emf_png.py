@@ -12,7 +12,20 @@ def emf_to_png(emf_path, output_dir):
     else:
         base_name = os.path.splitext(os.path.basename(emf_path))[0]
         png_path = os.path.join(output_dir, base_name + ".png")
-        subprocess.run(["magick", "-density", "300", emf_path, png_path], check=True)
+        # subprocess.run(["magick", "-density", "300", emf_path, png_path], check=True)
+        cmd = [
+            "inkscape",
+            emf_path,
+            "--export-type=png",
+            f"--export-filename={png_path}"
+        ]
+
+        result = subprocess.run(cmd, capture_output=True, text=True)
+
+        if result.returncode != 0:
+            print("Ошибка Inkscape:", result.stderr)
+            return None
+
         return png_path
 
 
